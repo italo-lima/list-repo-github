@@ -13,21 +13,33 @@ export default function Main() {
 
    const [newRepo, setNewRepo] = useState('')
    const [repositories, setRepositories] = useState([])
-   const [loading, setloading] = useState(false)
+   const [loading, setLoading] = useState(false)
+   const [error, setError] = useState(false)
 
     const handleSubmit = async e => {
-        setloading(true)
+        setLoading(true)
         e.preventDefault();
-        
-        const resp =await api.get(`/repos/${newRepo}`)
-        
-        const data = {
-            name: resp.data.full_name
+        try {
+            const checkRepo = repositories.findIndex(repository => repository.name === newRepo)
+           
+            if(checkRepo>=0){
+                throw new Error('Repositório duplicado');
+            }
+
+            const resp = await api.get(`/repos/${newRepo}`)
+            
+            const data = {
+                name: resp.data.full_name
+            }
+            
+            setRepositories([...repositories, data])
+            setNewRepo('')
+            setLoading(false)
+        } catch(e){
+            setNewRepo('')
+            setError(true)
+            setLoading(false)
         }
-        
-        setRepositories([...repositories, data])
-        setNewRepo('')
-        setloading(false)
     }   
 
     useEffect(() => {
@@ -49,7 +61,7 @@ export default function Main() {
                     Repositórios
                 </h1>
 
-                <Form onSubmit={handleSubmit}>
+                <Form onSubmit={handleSubmit} error={error}>
                     <input 
                     type="text" 
                     placeholder="Adicionar repositório"
@@ -59,9 +71,10 @@ export default function Main() {
                     
                     <SubmitButton loading={loading}>
                         {loading ? 
-                        <FaSpinner color="#fff" size={14} />
+                        ( <FaSpinner color="#fff" size={14} /> )
                             :
-                        <FaPlus color="#fff" size={14} /> }
+                        ( <FaPlus color="#fff" size={14} />) 
+                        }
                     </SubmitButton>
                 </Form>
 
